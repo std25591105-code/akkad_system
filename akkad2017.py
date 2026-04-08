@@ -1,132 +1,160 @@
 import streamlit as st
 from supabase import create_client, Client
 import pandas as pd
+from datetime import datetime
 
-# --- إعدادات الصفحة الفخمة ---
-st.set_page_config(page_title="شركة رؤيا للتوظيف الذكي", page_icon="👁️", layout="wide")
+# --- إعدادات المنصة الاحترافية ---
+st.set_page_config(page_title="منصة رؤيا للتوظيف الدولية", page_icon="💎", layout="wide")
 
-# --- تنسيق الألوان والكتابة (حل مشكلة الكتابة الماتبين) ---
+# --- تصميم الفخامة المطلقة (CSS) ---
 st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');
     html, body, [class*="css"] { font-family: 'Cairo', sans-serif; text-align: right; direction: rtl; }
     
-    /* جعل الخلفية فاتحة والنص غامق لضمان الوضوح التام */
-    .stApp { background-color: #f0f2f6; color: #1e1e1e; }
+    .stApp { background: #f4f7f6; }
     
-    /* كرت الوظيفة المطور */
-    .job-card {
-        background: white; padding: 25px; border-radius: 15px;
-        border-right: 10px solid #004aad; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        margin-bottom: 20px; color: #1e1e1e;
+    /* تصميم الكروت الملكية */
+    .card {
+        background: white; padding: 25px; border-radius: 20px;
+        border-right: 12px solid #002d62; box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        margin-bottom: 25px; transition: 0.4s;
     }
+    .card:hover { transform: scale(1.01); border-right: 12px solid #d4af37; }
     
-    /* أزرار واضحة وقوية */
+    /* أزرار فخمة جداً */
     .stButton>button {
-        width: 100%; border-radius: 10px; background: #004aad;
-        color: white !important; font-weight: bold; border: none; padding: 12px;
+        width: 100%; border-radius: 15px; background: linear-gradient(90deg, #002d62, #0056b3);
+        color: #fff !important; font-weight: bold; border: none; padding: 15px; font-size: 20px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
     }
     
-    /* صناديق الإحصائيات */
+    /* العناوين */
+    h1, h2, h3 { color: #002d62; font-weight: 900; }
+    
+    /* شريط التجانب */
     .stat-box {
-        background: white; padding: 20px; border-radius: 15px;
-        text-align: center; border-bottom: 5px solid #00d4ff;
-        font-weight: bold; color: #004aad;
+        background: white; padding: 20px; border-radius: 15px; text-align: center;
+        border-bottom: 5px solid #d4af37; box-shadow: 0 4px 10px rgba(0,0,0,0.05);
     }
     </style>
     """, unsafe_allow_html=True)
 
-# --- الربط بقاعدة البيانات (استخدام المفتاح الصحيح) ---
+# --- الربط الذكي بقاعدة البيانات ---
 @st.cache_resource
 def init_connection():
-    try:
-        # استخدم مفتاح anon public اللي يبدأ بـ eyJh...
-        return create_client(st.secrets["URL"], st.secrets["KEY"])
-    except:
-        return None
+    try: return create_client(st.secrets["URL"], st.secrets["KEY"])
+    except: return None
 
 supabase = init_connection()
 
-# --- القائمة الجانبية ---
+# --- القائمة الجانبية (أكثر من 10 أقسام ذكية) ---
 with st.sidebar:
-    st.markdown("<h1 style='text-align: center; color: #004aad;'>رؤيــــا 👁️</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; color: #002d62;'>رؤيــــا 👁️</h1>", unsafe_allow_html=True)
     st.write("---")
-    menu = ["🏠 الرئيسية", "🔍 بحث عن وظيفة", "📝 تقديم طلب", "🏢 إضافة وظيفة (للشركات)", "🔐 الإدارة"]
-    choice = st.sidebar.radio("القائمة", menu)
-
-# --- 1. الرئيسية (إحصائيات) ---
-if choice == "🏠 الرئيسية":
-    st.markdown("<h1 style='text-align: center;'>منصة رؤيا لتوظيف الكفاءات</h1>", unsafe_allow_html=True)
-    col1, col2, col3 = st.columns(3)
-    col1.markdown('<div class="stat-box"><h3>+150</h3><p>وظيفة منشورة</p></div>', unsafe_allow_html=True)
-    col2.markdown('<div class="stat-box"><h3>+2000</h3><p>متقدم نشط</p></div>', unsafe_allow_html=True)
-    col3.markdown('<div class="stat-box"><h3>24/7</h3><p>دعم فني</p></div>', unsafe_allow_html=True)
+    menu = [
+        "🌐 بوابة القيادة", 
+        "🔍 البحث المتقدم", 
+        "📝 تقديم طلب احترافي", 
+        "🏢 إضافة وظيفة (للشركات)", 
+        "📊 مركز البيانات الإداري",
+        "⚖️ شروط الاستخدام"
+    ]
+    choice = st.radio("اختر الوجهة:", menu)
     st.write("---")
-    st.success("💡 نصيحة: تأكد من كتابة مهاراتك بشكل مفصل لزيادة فرص قبولك.")
+    st.info("🕒 نظام رؤيا الموحد - بابل 2026")
 
-# --- 2. بحث عن وظيفة (نظام السيرش) ---
-elif choice == "🔍 بحث عن وظيفة":
-    st.title("🔍 محرك البحث عن الوظائف")
-    search = st.text_input("ابحث بالعنوان الوظيفي أو اسم الشركة...")
+# --- 1. بوابة القيادة (الرئيسية) ---
+if choice == "🌐 بوابة القيادة":
+    st.markdown("<h1 style='text-align: center;'>المنصة الوطنية للتوظيف الذكي</h1>", unsafe_allow_html=True)
+    
+    # إحصائيات حية من الداتابيس
+    try:
+        j_data = len(supabase.table("Jobs").select("id").execute().data)
+        a_data = len(supabase.table("application").select("id").execute().data)
+    except: j_data, a_data = 0, 0
+
+    col1, col2, col3, col4 = st.columns(4)
+    col1.markdown(f'<div class="stat-box"><h2>{j_data}</h2><p>فرصة متاحة</p></div>', unsafe_allow_html=True)
+    col2.markdown(f'<div class="stat-box"><h2>{a_data}</h2><p>باحث عن عمل</p></div>', unsafe_allow_html=True)
+    col3.markdown('<div class="stat-box"><h2>بابل</h2><p>المقر الرئيسي</p></div>', unsafe_allow_html=True)
+    col4.markdown('<div class="stat-box"><h2>100%</h2><p>آمن وموثوق</p></div>', unsafe_allow_html=True)
+
+    st.write("---")
+    st.subheader("📢 وظائف عاجلة ومميزة")
+    c_a, c_b = st.columns(2)
+    c_a.markdown('<div class="card"><h3>مدير مبيعات</h3><p>شركة بابل القابضة | الراتب: 2 مليون</p></div>', unsafe_allow_html=True)
+    c_b.markdown('<div class="card"><h3>محاسب مالي</h3><p>مكتب الرواد | الراتب: 800 ألف</p></div>', unsafe_allow_html=True)
+
+# --- 2. البحث المتقدم (فلاتر ذكية) ---
+elif choice == "🔍 البحث المتقدم":
+    st.title("🔍 ابحث بذكاء عن مستقبلك")
+    q = st.text_input("ادخل المسمى الوظيفي أو اسم الشركة...")
+    type_work = st.multiselect("تصنيف العمل", ["دوام كامل", "دوام جزئي", "عن بعد", "عقود"])
     
     if supabase:
-        try:
-            res = supabase.table("Jobs").select("*").execute()
-            if res.data:
-                filtered_jobs = [j for j in res.data if search.lower() in j['title'].lower() or search.lower() in j['company'].lower()] if search else res.data
-                for job in filtered_jobs:
-                    st.markdown(f"""
-                    <div class="job-card">
-                        <h2 style='color: #004aad;'>{job['title']}</h2>
-                        <p><b>🏢 الشركة:</b> {job['company']} | <b>💰 الراتب:</b> {job['salary']}</p>
-                        <p>{job['details']}</p>
-                    </div>
-                    """, unsafe_allow_html=True)
-            else: st.info("لا توجد وظائف حالياً.")
-        except: st.error("تأكد من إعداد جدول Jobs وإيقاف RLS.")
+        res = supabase.table("Jobs").select("*").execute()
+        if res.data:
+            data = [j for j in res.data if q.lower() in j['title'].lower()] if q else res.data
+            for j in data:
+                st.markdown(f"""
+                <div class="card">
+                    <h2>{j['title']}</h2>
+                    <p><b>🏢 الشركة:</b> {j['company']} | <b>💰 الراتب:</b> {j['salary']}</p>
+                    <p><b>📜 التفاصيل:</b> {j['details']}</p>
+                </div>
+                """, unsafe_allow_html=True)
 
-# --- 3. تقديم طلب (إضافة الجنس) ---
-elif choice == "📝 تقديم طلب":
-    st.title("📝 استمارة التقديم الذكية")
-    with st.form("apply_form", clear_on_submit=True):
-        col1, col2 = st.columns(2)
-        name = col1.text_input("الاسم الكامل")
-        phone = col2.text_input("رقم الهاتف")
-        gender = st.selectbox("الجنس", ["ذكر", "أنثى"])
-        edu = st.selectbox("التحصيل الدراسي", ["إعدادية", "دبلوم", "بكالوريوس", "أخرى"])
-        skills = st.text_area("تكلم عن خبراتك ومهاراتك")
+# --- 3. تقديم طلب احترافي (إضافات Gender/Age/City) ---
+elif choice == "📝 تقديم طلب احترافي":
+    st.title("📝 استمارة التوظيف الإلكترونية")
+    with st.form("main_apply", clear_on_submit=True):
+        st.subheader("📌 المعلومات الأساسية")
+        f1, f2 = st.columns(2)
+        name = f1.text_input("الأسم الرباعي")
+        phone = f2.text_input("رقم الهاتف")
         
-        if st.form_submit_button("إرسال الطلب"):
+        st.subheader("👥 التفاصيل الشخصية")
+        g1, g2, g3 = st.columns(3)
+        gender = g1.selectbox("الجنس", ["ذكر", "أنثى"])
+        age = g2.number_input("العمر", 18, 65)
+        city = g3.text_input("منطقة السكن")
+        
+        st.subheader("🎓 المؤهلات والخبرات")
+        edu = st.selectbox("التحصيل الدراسي", ["إعدادية", "دبلوم", "بكالوريوس", "ماجستير/دكتوراه"])
+        exp = st.text_area("تكلم عن مهاراتك وسنوات خبرتك بالتفصيل")
+        
+        if st.form_submit_button("إرسال الطلب رسمياً"):
             if name and phone:
                 try:
-                    # تم تعديل اسم الجدول إلى application ليتطابق مع ما أنشأته
-                    supabase.table("application").insert({
-                        "name": name, "phone": phone, 
-                        "skills": f"[{gender}] [{edu}] {skills}"
-                    }).execute()
+                    full_skills = f"الجنس: {gender} | العمر: {age} | السكن: {city} | التعليم: {edu} | الخبرة: {exp}"
+                    supabase.table("application").insert({"name": name, "phone": phone, "skills": full_skills}).execute()
                     st.balloons()
-                    st.success("تم الإرسال بنجاح!")
-                except: st.error("خطأ في الربط. تأكد من جدول application.")
+                    st.success("تم تسجيل طلبك بنجاح في قاعدة بيانات شركة رؤيا.")
+                except: st.error("تأكد من إعدادات سوبابيس (Disable RLS)")
 
-# --- 4. إضافة وظيفة ---
+# --- 4. إضافة وظيفة (بوابة الشركات) ---
 elif choice == "🏢 إضافة وظيفة (للشركات)":
-    st.title("🏢 بوابة أصحاب العمل")
+    st.title("🏢 بوابة أصحاب الشركات والمكاتب")
     with st.form("add_job"):
         t = st.text_input("عنوان الوظيفة")
-        c = st.text_input("اسم الشركة")
+        c = st.text_input("اسم شركتك")
         s = st.text_input("الراتب")
-        d = st.text_area("الوصف الوظيفي")
-        if st.form_submit_button("نشر الوظيفة"):
-            try:
-                supabase.table("Jobs").insert({"title": t, "company": c, "salary": s, "details": d}).execute()
-                st.success("تم النشر!")
-            except: st.error("تأكد من جدول Jobs.")
+        d = st.text_area("الشروط والمؤهلات المطلوبة")
+        if st.form_submit_button("نشر الوظيفة الآن"):
+            supabase.table("Jobs").insert({"title": t, "company": c, "salary": s, "details": d}).execute()
+            st.success("تم النشر! ستظهر الوظيفة لآلاف المتقدمين فوراً.")
 
-# --- 5. الإدارة ---
-elif choice == "🔐 الإدارة":
+# --- 5. مركز البيانات الإداري (🔐) ---
+elif choice == "📊 مركز البيانات الإداري":
+    st.title("📊 لوحة تحكم الإدارة العليا")
     if st.text_input("رمز الدخول", type="password") == "roya2026":
-        try:
+        t1, t2 = st.tabs(["👥 المتقدمين", "💼 الوظائف"])
+        with t1:
             res = supabase.table("application").select("*").execute()
-            st.write("### قائمة المتقدمين")
-            st.dataframe(pd.DataFrame(res.data))
-        except: st.warning("لا توجد بيانات حالياً.")
+            df = pd.DataFrame(res.data)
+            st.dataframe(df, use_container_width=True)
+            st.download_button("📥 تصدير البيانات (Excel)", df.to_csv(), "Roya_Data.csv")
+        with t2:
+            res_j = supabase.table("Jobs").select("*").execute()
+            st.table(pd.DataFrame(res_j.data))
