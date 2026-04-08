@@ -1,156 +1,124 @@
 import streamlit as st
-import pandas as pd
-from supabase import create_client
-from datetime import datetime
+from supabase import create_client, Client
 
-# --- إعدادات الربط مالتك من الصور ---
-URL = "https://kemyohayjryswwtwtyfo.supabase.co"
-KEY = "sb_publishable_nCM_0PuIjQeR0i0lXbkdrA_qn_o6" # تأكد إنك تنسخ المفتاح كامل من صفحة API Keys
+# --- إعدادات الصفحة ---
+st.set_page_config(page_title="شركة رؤيا للتوظيف", page_icon="👁️", layout="wide")
 
-# إنشاء الاتصال بالسحابة
-supabase = create_client(URL, KEY)
-st.set_page_config(page_title="بوابة أكد | Akkad Portal", layout="wide", page_icon="🏢")
+# --- الاتصال بقاعدة البيانات (Supabase) ---
+@st.cache_resource
+def init_connection():
+    url = st.secrets["URL"]
+    key = st.secrets["KEY"]
+    return create_client(url, key)
 
-# --- دوال الربط مع السحاب ---
-def get_data(table):
-    res = supabase.table(table).select("*").execute()
-    return pd.DataFrame(res.data)
+supabase: Client = init_connection()
 
-# --- نظام الحماية وتسجيل الدخول ---
-if 'auth' not in st.session_state: st.session_state.auth = False
+# --- القائمة الجانبية (Navigation) ---
+st.sidebar.markdown("<h1 style='text-align: center; color: #1E88E5;'>شركة رؤيا 👁️</h1>", unsafe_allow_html=True)
+st.sidebar.markdown("<p style='text-align: center;'>خيارك الأمثل لإيجاد الوظيفة المناسبة</p>", unsafe_allow_html=True)
+st.sidebar.write("---")
+menu = ["الرئيسية 🏠", "إضافة وظيفة ➕", "الوظائف المتاحة 💼", "تسجيل باحث عن عمل 📝", "بيانات المتقدمين 👥"]
+choice = st.sidebar.radio("انتقل إلى:", menu)
 
-if not st.session_state.auth:
-    st.markdown("<h1 style='text-align: center; color: #1E3A8A;'>🏢 نظام بوابة أكد الذكي</h1>", unsafe_allow_html=True)
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        with st.container(border=True):
-            tab_login, tab_reg = st.tabs(["🔑 دخول الموظفين", "📩 طلب انضمام"])
-            with tab_login:
-                u = st.text_input("اسم المستخدم", key="u_login")
-                p = st.text_input("كلمة المرور", type="password", key="p_login")
-                if st.button("تسجيل الدخول", use_container_width=True):
-                    res = supabase.table("users").select("*").eq("username", u).eq("password", p).eq("active", 1).execute()
-                    if res.data:
-                        st.session_state.auth, st.session_state.user = True, u
-                        st.session_state.role = res.data[0]['role']
-                        st.rerun()
-                    else: st.error("عذراً، البيانات غير صحيحة أو الحساب غير نشط")
-            with tab_reg:
-                new_u = st.text_input("اسم مستخدم مقترح")
-                new_p = st.text_input("كلمة مرور قوية", type="password")
-                if st.button("إرسال طلب للمدير", use_container_width=True):
-                    try:
-                        supabase.table("users").insert({"username": new_u, "password": new_p, "role": "staff", "active": 0}).execute()
-                        st.success("تم الإرسال بنجاح، انتظر تفعيل الإدارة")
-                    except: st.error("الاسم محجوز مسبقاً")
-    st.stop()
+# --- 1. الصفحة الرئيسية ---
+if choice == "الرئيسية 🏠":
+    st.markdown("<h1 style='text-align: center;'>مرحباً بك في شركة رؤيا للتوظيف 👁️</h1>", unsafe_allow_html=True)
+    st.image("https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?ixlib=rb-4.0.3", use_container_width=True)
+    st.info("نحن هنا لنكون الجسر بينك وبين مستقبلك المهني. استخدم القائمة الجانبية للبدء.")
 
-# --- لوحة التحكم الرئيسية (Dashboard) ---
-st.markdown(f"### 🗓️ {datetime.now().strftime('%Y-%m-%d')} | مرحباً بك، {st.session_state.user} 👋")
-
-# إحصائيات سريعة (للمظهر الفخم)
-c1, c2, c3, c4 = st.columns(4)
-with c1: st.metric("إجمالي الوظائف", len(get_data("jobs")))
-with c2: st.metric("طلبات التوظيف", len(get_data("submissions")))
-with c3: st.metric("الموظفون النشطون", len(get_data("users")[get_data("users")['active']==1]))
-with c4: st.metric("فرع الشركة", "بابل / المركز")
-
-st.divider()
-
-# --- القائمة الجانبية ---
-menu = st.sidebar.selectbox("🎯 التنقل السريع", ["لوحة التحكم المركزية", "إدارة الإرساليات", "شؤون الموظفين (Admin)"])
-
-# --- 1. لوحة التحكم المركزية (الوظائف) ---
-if menu == "لوحة التحكم المركزية":
-    st.subheader("📋 إدارة الفرص الوظيفية")
-    
-    if st.session_state.role == "admin":
-        with st.expander("➕ إضافة وظيفة جديدة (صلاحية مدير)"):
-            col_a, col_b = st.columns(2)
-            jid = col_a.text_input("كود الوظيفة (مثلاً: AK-101)")
-            jtitle = col_b.text_input("المسمى الوظيفي")
-            if st.button("اعتماد ونشر الوظيفة"):
-                supabase.table("jobs").insert({"job_id": jid, "title": jtitle, "added_by": st.session_state.user, "date_added": str(datetime.now().date())}).execute()
-                st.success("تم النشر بنجاح")
-                st.rerun()
-
-    jobs_df = get_data("jobs")
-    if not jobs_df.empty:
-        for idx, row in jobs_df.iterrows():
-            with st.container(border=True):
-                col_i, col_t, col_d, col_b = st.columns([1, 3, 2, 1])
-                col_i.info(f"🆔 {row['job_id']}")
-                col_t.markdown(f"**{row['title']}**")
-                col_d.caption(f"📅 نُشرت في: {row['date_added']}")
-                if st.session_state.role == "admin":
-                    if col_b.button("🗑️ حذف", key=f"del_{row['job_id']}"):
-                        supabase.table("jobs").delete().eq("job_id", row['job_id']).execute()
-                        st.rerun()
-    else: st.warning("لا توجد وظائف معروضة حالياً")
-
-# --- 2. إدارة الإرساليات (سجل المتقدمين) ---
-elif menu == "إدارة الإرساليات":
-    st.subheader("📩 سجل المتقدمين والنتائج")
-    
-    with st.expander("📝 تسجيل إرسالية مرشح جديد"):
-        all_jobs = get_data("jobs")
-        if not all_jobs.empty:
-            with st.form("sub_form"):
-                target = st.selectbox("الوظيفة المستهدفة", all_jobs['job_id'].tolist())
-                name = st.text_input("اسم المرشح الثلاثي")
-                phone = st.text_input("رقم الهاتف (واتساب)")
-                note = st.text_area("ملاحظات أولية")
-                if st.form_submit_button("حفظ وإرسال"):
-                    supabase.table("submissions").insert({
-                        "job_id": target, "name": name, "phone": phone, "emp": st.session_state.user,
-                        "status": "قيد المراجعة", "result_note": note, "date": str(datetime.now().date())
+# --- 2. إضافة وظيفة ---
+elif choice == "إضافة وظيفة ➕":
+    st.title("نشر فرصة عمل جديدة")
+    with st.form("job_form", clear_on_submit=True):
+        job_title = st.text_input("المسمى الوظيفي")
+        company_name = st.text_input("اسم الشركة")
+        salary = st.text_input("الراتب")
+        details = st.text_area("تفاصيل الوظيفة")
+        submit_job = st.form_submit_button("نشر الوظيفة في رؤيا")
+        
+        if submit_job:
+            if job_title and company_name:
+                try:
+                    supabase.table("jobs").insert({
+                        "title": job_title,
+                        "company": company_name,
+                        "salary": salary,
+                        "details": details
                     }).execute()
-                    st.success("تم الحفظ بنجاح")
-                    st.rerun()
-        else: st.error("لا يمكن الإضافة، لا توجد وظائف متاحة")
+                    st.success("✅ تم نشر الوظيفة بنجاح في نظام رؤيا!")
+                except Exception as e:
+                    st.error(f"حدث خطأ: {e}")
 
-    # عرض الإرساليات مع فلاتر
-    subs_df = get_data("submissions")
-    if not subs_df.empty:
-        st.dataframe(subs_df, use_container_width=True)
-        
-        if st.session_state.role == "admin":
-            st.divider()
-            st.subheader("🛠️ تحديث النتائج (للمدير)")
-            sub_to_edit = st.selectbox("اختر الرقم التسلسلي للإرسالية (ID)", subs_df['id'].tolist())
-            new_status = st.select_slider("تغيير الحالة", options=["قيد المراجعة", "انتظار", "مرفوض", "مقبول"])
-            final_note = st.text_input("ملاحظة نهائية (مثلاً: باشر العمل، أو لم يجب على الهاتف)")
-            if st.button("تحديث الحالة النهائية"):
-                supabase.table("submissions").update({"status": new_status, "result_note": final_note}).eq("id", sub_to_edit).execute()
-                st.success("تم التحديث")
-                st.rerun()
+# --- 3. عرض الوظائف ---
+elif choice == "الوظائف المتاحة 💼":
+    st.title("استكشف الفرص المتاحة حالياً")
+    try:
+        response = supabase.table("jobs").select("*").execute()
+        jobs_data = response.data
+        if jobs_data:
+            for job in jobs_data:
+                with st.expander(f"💼 {job.get('title')} - {job.get('company')}"):
+                    st.write(f"**الراتب:** {job.get('salary')}")
+                    st.write(f"**التفاصيل:** {job.get('details')}")
+        else:
+            st.info("لا توجد وظائف معروضة حالياً.")
+    except Exception as e:
+        st.error(f"حدث خطأ: {e}")
 
-# --- 3. شؤون الموظفين (إدارة الحسابات) ---
-elif menu == "شؤون الموظفين (Admin)":
-    if st.session_state.role != "admin":
-        st.error("❌ هذه المنطقة محظورة! صلاحية المدير فقط.")
-    else:
-        st.subheader("👥 إدارة طاقم العمل")
-        u_df = get_data("users")
+# --- 4. تسجيل باحث عن عمل ---
+elif choice == "تسجيل باحث عن عمل 📝":
+    st.markdown("<h2 style='text-align: center;'>استمارة التقديم الإلكترونية - شركة رؤيا</h2>", unsafe_allow_html=True)
+    
+    with st.form("applicant_form", clear_on_submit=False):
+        full_name = st.text_input("الاسم الرباعي")
+        phone = st.text_input("رقم الهاتف")
+        skills = st.text_area("الخبرات والمهارات")
         
-        # تفعيل الحسابات الجديدة
-        pending = u_df[u_df['active'] == 0]
-        st.write(f"طلبات معلقة: {len(pending)}")
-        for _, r in pending.iterrows():
-            col_un, col_act = st.columns([3, 1])
-            col_un.write(f"طلب من: **{r['username']}**")
-            if col_act.button("تفعيل ✅", key=f"act_{r['username']}"):
-                supabase.table("users").update({"active": 1}).eq("username", r['username']).execute()
-                st.rerun()
+        st.write("---")
+        personal_photo = st.file_uploader("ارفق صورتك الشخصية 📸", type=['jpg', 'jpeg', 'png'])
+        documents = st.file_uploader("ارفق صورة الهوية/المستمسكات 📄", type=['jpg', 'jpeg', 'png'])
         
-        st.divider()
-        # قائمة الموظفين الحاليين
-        st.write("📋 قائمة الموظفين النشطين")
-        st.table(u_df[u_df['active'] == 1][['username', 'role']])
+        submit_applicant = st.form_submit_button("إرسال الطلب وإصدار الاستمارة")
+        
+    if submit_applicant:
+        if full_name and phone:
+            try:
+                # حفظ في قاعدة البيانات
+                supabase.table("applicants").insert({
+                    "name": full_name, "phone": phone, "skills": skills
+                }).execute()
+                
+                st.balloons()
+                st.markdown("<div style='background-color: #f0f2f6; padding: 20px; border-radius: 10px; border: 2px solid #1E88E5;'>", unsafe_allow_html=True)
+                st.markdown("<h2 style='text-align: center; color: #1E88E5;'>📋 استمارة تقديم - شركة رؤيا للتوظيف</h2>", unsafe_allow_html=True)
+                
+                c1, c2 = st.columns([3, 1])
+                with c1:
+                    st.write(f"**الاسم الكامل:** {full_name}")
+                    st.write(f"**رقم الهاتف:** {phone}")
+                    st.write(f"**المهارات:** {skills}")
+                with c2:
+                    if personal_photo:
+                        st.image(personal_photo, width=150)
+                
+                if documents:
+                    st.write("**المرفقات الرسمية:**")
+                    st.image(documents, use_container_width=True)
+                
+                st.markdown("</div>", unsafe_allow_html=True)
+                st.info("⚠️ يرجى تصوير الشاشة للاحتفاظ بالاستمارة.")
+            except Exception as e:
+                st.error(f"حدث خطأ: {e}")
 
-# --- تذييل الصفحة ---
-st.sidebar.divider()
-if st.sidebar.button("🚪 تسجيل الخروج", use_container_width=True):
-    st.session_state.auth = False
-    st.rerun()
-st.sidebar.caption("نظام أكد السحابي v3.0 | 2026")
+# --- 5. بيانات المتقدمين ---
+elif choice == "بيانات المتقدمين 👥":
+    st.title("إدارة المتقدمين (خاص بالشركة)")
+    try:
+        response = supabase.table("applicants").select("*").execute()
+        applicants_data = response.data
+        if applicants_data:
+            st.dataframe(applicants_data, use_container_width=True)
+        else:
+            st.info("لا توجد طلبات تقديم حتى الآن.")
+    except Exception as e:
+        st.error(f"حدث خطأ: {e}")
